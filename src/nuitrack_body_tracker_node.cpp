@@ -558,9 +558,9 @@ namespace nuitrack_body_tracker
         skeleton_data.joint_position_left_elbow.y = skeleton.joints[JOINT_LEFT_ELBOW].real.x / 1000.0;
         skeleton_data.joint_position_left_elbow.z = skeleton.joints[JOINT_LEFT_ELBOW].real.y / 1000.0;
 
-        skeleton_data.joint_position_left_hand.x = skeleton.joints[JOINT_LEFT_HAND].real.z / 1000.0;
-        skeleton_data.joint_position_left_hand.y = skeleton.joints[JOINT_LEFT_HAND].real.x / 1000.0;
-        skeleton_data.joint_position_left_hand.z = skeleton.joints[JOINT_LEFT_HAND].real.y / 1000.0;
+        skeleton_data.joint_position_left_hand.x = skeleton.joints[JOINT_LEFT_HAND].real.z/1000;
+        skeleton_data.joint_position_left_hand.y = skeleton.joints[JOINT_LEFT_HAND].real.x/1000;
+        skeleton_data.joint_position_left_hand.z = skeleton.joints[JOINT_LEFT_HAND].real.y/1000;
 
         skeleton_data.joint_position_right_shoulder.x = skeleton.joints[JOINT_RIGHT_SHOULDER].real.z / 1000.0;
         skeleton_data.joint_position_right_shoulder.y = skeleton.joints[JOINT_RIGHT_SHOULDER].real.x / 1000.0;
@@ -570,9 +570,9 @@ namespace nuitrack_body_tracker
         skeleton_data.joint_position_right_elbow.y = skeleton.joints[JOINT_RIGHT_ELBOW].real.x / 1000.0;
         skeleton_data.joint_position_right_elbow.z = skeleton.joints[JOINT_RIGHT_ELBOW].real.y / 1000.0;
 
-        skeleton_data.joint_position_right_hand.x = skeleton.joints[JOINT_RIGHT_HAND].real.z / 1000.0;
-        skeleton_data.joint_position_right_hand.y = skeleton.joints[JOINT_RIGHT_HAND].real.x / 1000.0;
-        skeleton_data.joint_position_right_hand.z = skeleton.joints[JOINT_RIGHT_HAND].real.y / 1000.0;
+        skeleton_data.joint_position_right_hand.x = skeleton.joints[JOINT_RIGHT_HAND].real.z/1000;
+        skeleton_data.joint_position_right_hand.y = skeleton.joints[JOINT_RIGHT_HAND].real.x/1000;
+        skeleton_data.joint_position_right_hand.z = skeleton.joints[JOINT_RIGHT_HAND].real.y/1000;
 
         // Hand:  open (0), grasping (1), waving (2)
         /* TODO - see which of these actually work
