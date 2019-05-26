@@ -194,6 +194,7 @@ namespace nuitrack_body_tracker
 
       int _width = frame->getCols(); 
       int _height = frame->getRows();
+
       const uint16_t* depthPtr = frame->getData();
 
       //std::cout << "DBG DEPTH:  Width = " << _width << " Height = " << _height << std::endl;
@@ -231,16 +232,17 @@ namespace nuitrack_body_tracker
           depth_msg.data.push_back(depthValue);
           depth_msg.data.push_back(depthValue);
           
-          
           //store xyz in point cloud, transforming from image coordinates, (Z Forward to X Forward)
           Vector3 cloud_point = depthSensor_->convertProjToRealCoords(col, row, fulldepthValue );
           
-          float X_World = cloud_point.x / 1000.0; // mm to meters
-          float Y_World = cloud_point.y / 1000.0;
-          float Z_World = cloud_point.z / 1000.0; 
+          float X_World = cloud_point.x/1000; // mm to meters
+          float Y_World = cloud_point.y/1000;
+          float Z_World = cloud_point.z/1000; 
+
+          //std::cout << cloud_point.x << std::endl;
           
-          *out_x = Z_World;
-          *out_y = -X_World;
+          *out_x = X_World;
+          *out_y = Z_World;
           *out_z = Y_World; 
           ++out_x;
           ++out_y;
@@ -321,7 +323,7 @@ namespace nuitrack_body_tracker
 
         //if(skeleton.id != last_id_)
         {
-          ROS_INFO("%s: detected person ID %d", _name.c_str(), skeleton.id);
+          //ROS_INFO("%s: detected person ID %d", _name.c_str(), skeleton.id);
           last_id_ = skeleton.id;
         }
 
@@ -344,12 +346,12 @@ namespace nuitrack_body_tracker
         person_data.position2d.z = skeleton.joints[KEY_JOINT_TO_TRACK].proj.z / 1000.0;
 
         
-        std::cout << std::setprecision(4) << std::setw(7) 
+        /*std::cout << std::setprecision(4) << std::setw(7) 
           << "Nuitrack: " << "2D Tracking"  
           << " x: " << track2d.x 
           << " y: " << track2d.y
           << " ID: " << track2d.theta
-          << std::endl;
+          << std::endl;*/
 
 
 
@@ -382,12 +384,12 @@ namespace nuitrack_body_tracker
               {
                 json_id_str = found_object.second.data();
                 json_id = found_object.second.get_value<int>();
-                std::cout << "FIELD: id = " << json_id_str << " = " << json_id << std::endl;
+                //std::cout << "FIELD: id = " << json_id_str << " = " << json_id << std::endl;
 
               }
               else if( "class" == found_object.first)
               {
-                std::cout << "FIELD: class = " << found_object.second.data() << std::endl;
+                //std::cout << "FIELD: class = " << found_object.second.data() << std::endl;
                 json_class_str = found_object.second.data();
 
               }
@@ -398,8 +400,8 @@ namespace nuitrack_body_tracker
                 //if( (json_class_str == "human") && (json_id_str != "") )
                 if( !( (json_class_str == "human") && (json_id == skeleton.id) ))
                 {
-                  std::cout << "FACE ID (" << json_id << ") DOES NOT MATCH SKELETON (" <<
-                    skeleton.id << ")... SKIPPING  (or object != Human?)" << std::endl;
+                  //std::cout << "FACE ID (" << json_id << ") DOES NOT MATCH SKELETON (" <<
+                    //skeleton.id << ")... SKIPPING  (or object != Human?)" << std::endl;
                 }
                 else
                 {
@@ -407,12 +409,12 @@ namespace nuitrack_body_tracker
                   boost::property_tree::ptree face = found_object.second; // subtree
                   if(face.empty()) 
                   {
-                    std::cout << "Face tree is empty!" << std::endl;
+                    //std::cout << "Face tree is empty!" << std::endl;
                   }
                   else
                   {
                     // this is a face subtree
-                    std::cout << "FACE FOUND " << std::endl;
+                    //std::cout << "FACE FOUND " << std::endl;
                     person_data.face_found = true;
                     float face_left, face_top, face_width, face_height;
                     face_left = face_top = face_width = face_height = 0.0;
@@ -479,7 +481,7 @@ namespace nuitrack_body_tracker
                       // rectangle is set of std::pair
                       std::string age_key = age.first;
                       std::string age_val = age.second.data();
-                      std::cout << "FACE AGE: " << age_key << " : " << age_val << std::endl;
+                      //std::cout << "FACE AGE: " << age_key << " : " << age_val << std::endl;
                       
                       if( age.first == "years")
                       {
@@ -490,7 +492,7 @@ namespace nuitrack_body_tracker
                     }
 
                     std::string gender_val = face.get<std::string>("gender");
-                    std::cout << "GENDER: " << gender_val << std::endl;
+                    //std::cout << "GENDER: " << gender_val << std::endl;
                     if("male" == gender_val)
                     {
                       person_data.gender = 1;
@@ -525,54 +527,56 @@ namespace nuitrack_body_tracker
         //skeleton_data.centerOfMass.z = 0.0;
 
         // *** POSITION 3D ***
-        person_data.position3d.x = skeleton.joints[KEY_JOINT_TO_TRACK].real.z / 1000.0;
-        person_data.position3d.y = skeleton.joints[KEY_JOINT_TO_TRACK].real.x / 1000.0;
+        person_data.position3d.x = skeleton.joints[KEY_JOINT_TO_TRACK].real.x / 1000.0;
+        person_data.position3d.y = skeleton.joints[KEY_JOINT_TO_TRACK].real.z / 1000.0;
         person_data.position3d.z = skeleton.joints[KEY_JOINT_TO_TRACK].real.y / 1000.0;
  
        
-        skeleton_data.joint_position_head.x = skeleton.joints[JOINT_HEAD].real.z / 1000.0;
-        skeleton_data.joint_position_head.y = skeleton.joints[JOINT_HEAD].real.x / 1000.0;
+        skeleton_data.joint_position_head.x = skeleton.joints[JOINT_HEAD].real.x / 1000.0;
+        skeleton_data.joint_position_head.y = skeleton.joints[JOINT_HEAD].real.z / 1000.0;
         skeleton_data.joint_position_head.z = skeleton.joints[JOINT_HEAD].real.y / 1000.0;
 
-        skeleton_data.joint_position_neck.x = skeleton.joints[JOINT_NECK].real.z / 1000.0;
-        skeleton_data.joint_position_neck.y = skeleton.joints[JOINT_NECK].real.x / 1000.0;
+        skeleton_data.joint_position_neck.x = skeleton.joints[JOINT_NECK].real.x / 1000.0;
+        skeleton_data.joint_position_neck.y = skeleton.joints[JOINT_NECK].real.z / 1000.0;
         skeleton_data.joint_position_neck.z = skeleton.joints[JOINT_NECK].real.y / 1000.0;
 
-        skeleton_data.joint_position_spine_top.x = skeleton.joints[JOINT_TORSO].real.z / 1000.0;
-        skeleton_data.joint_position_spine_top.y = skeleton.joints[JOINT_TORSO].real.x / 1000.0;
+        skeleton_data.joint_position_spine_top.x = skeleton.joints[JOINT_TORSO].real.x / 1000.0;
+        skeleton_data.joint_position_spine_top.y = skeleton.joints[JOINT_TORSO].real.z / 1000.0;
         skeleton_data.joint_position_spine_top.z = skeleton.joints[JOINT_TORSO].real.y / 1000.0;
 
-        skeleton_data.joint_position_spine_mid.x = skeleton.joints[JOINT_WAIST].real.z / 1000.0;
-        skeleton_data.joint_position_spine_mid.y = skeleton.joints[JOINT_WAIST].real.x / 1000.0;
+        skeleton_data.joint_position_spine_mid.x = skeleton.joints[JOINT_WAIST].real.x / 1000.0;
+        skeleton_data.joint_position_spine_mid.y = skeleton.joints[JOINT_WAIST].real.z / 1000.0;
         skeleton_data.joint_position_spine_mid.z = skeleton.joints[JOINT_WAIST].real.y / 1000.0;
 
         skeleton_data.joint_position_spine_bottom.x = 0.0;
         skeleton_data.joint_position_spine_bottom.y = 0.0;
         skeleton_data.joint_position_spine_bottom.z = 0.0;
 
-        skeleton_data.joint_position_left_shoulder.x = skeleton.joints[JOINT_LEFT_SHOULDER].real.z / 1000.0;
-        skeleton_data.joint_position_left_shoulder.y = skeleton.joints[JOINT_LEFT_SHOULDER].real.x / 1000.0;
+        skeleton_data.joint_position_left_shoulder.x = skeleton.joints[JOINT_LEFT_SHOULDER].real.x / 1000.0;
+        skeleton_data.joint_position_left_shoulder.y = skeleton.joints[JOINT_LEFT_SHOULDER].real.z / 1000.0;
         skeleton_data.joint_position_left_shoulder.z = skeleton.joints[JOINT_LEFT_SHOULDER].real.y / 1000.0;
 
-        skeleton_data.joint_position_left_elbow.x = skeleton.joints[JOINT_LEFT_ELBOW].real.z / 1000.0;
-        skeleton_data.joint_position_left_elbow.y = skeleton.joints[JOINT_LEFT_ELBOW].real.x / 1000.0;
+        skeleton_data.joint_position_left_elbow.x = skeleton.joints[JOINT_LEFT_ELBOW].real.x / 1000.0;
+        skeleton_data.joint_position_left_elbow.y = skeleton.joints[JOINT_LEFT_ELBOW].real.z / 1000.0;
         skeleton_data.joint_position_left_elbow.z = skeleton.joints[JOINT_LEFT_ELBOW].real.y / 1000.0;
 
-        skeleton_data.joint_position_left_hand.x = skeleton.joints[JOINT_LEFT_HAND].real.z/1000;
-        skeleton_data.joint_position_left_hand.y = skeleton.joints[JOINT_LEFT_HAND].real.x/1000;
-        skeleton_data.joint_position_left_hand.z = skeleton.joints[JOINT_LEFT_HAND].real.y/1000;
+        skeleton_data.joint_position_left_hand.x = skeleton.joints[JOINT_LEFT_HAND].real.x / 1000;
+        skeleton_data.joint_position_left_hand.y = skeleton.joints[JOINT_LEFT_HAND].real.z / 1000;
+        skeleton_data.joint_position_left_hand.z = skeleton.joints[JOINT_LEFT_HAND].real.y / 1000;
 
-        skeleton_data.joint_position_right_shoulder.x = skeleton.joints[JOINT_RIGHT_SHOULDER].real.z / 1000.0;
-        skeleton_data.joint_position_right_shoulder.y = skeleton.joints[JOINT_RIGHT_SHOULDER].real.x / 1000.0;
+
+
+        skeleton_data.joint_position_right_shoulder.x = skeleton.joints[JOINT_RIGHT_SHOULDER].real.x / 1000.0;
+        skeleton_data.joint_position_right_shoulder.y = skeleton.joints[JOINT_RIGHT_SHOULDER].real.z / 1000.0;
         skeleton_data.joint_position_right_shoulder.z = skeleton.joints[JOINT_RIGHT_SHOULDER].real.y / 1000.0;
 
-        skeleton_data.joint_position_right_elbow.x = skeleton.joints[JOINT_RIGHT_ELBOW].real.z / 1000.0;
-        skeleton_data.joint_position_right_elbow.y = skeleton.joints[JOINT_RIGHT_ELBOW].real.x / 1000.0;
+        skeleton_data.joint_position_right_elbow.x = skeleton.joints[JOINT_RIGHT_ELBOW].real.x / 1000.0;
+        skeleton_data.joint_position_right_elbow.y = skeleton.joints[JOINT_RIGHT_ELBOW].real.z / 1000.0;
         skeleton_data.joint_position_right_elbow.z = skeleton.joints[JOINT_RIGHT_ELBOW].real.y / 1000.0;
 
-        skeleton_data.joint_position_right_hand.x = skeleton.joints[JOINT_RIGHT_HAND].real.z/1000;
-        skeleton_data.joint_position_right_hand.y = skeleton.joints[JOINT_RIGHT_HAND].real.x/1000;
-        skeleton_data.joint_position_right_hand.z = skeleton.joints[JOINT_RIGHT_HAND].real.y/1000;
+        skeleton_data.joint_position_right_hand.x = skeleton.joints[JOINT_RIGHT_HAND].real.x / 1000;
+        skeleton_data.joint_position_right_hand.y = skeleton.joints[JOINT_RIGHT_HAND].real.z / 1000;
+        skeleton_data.joint_position_right_hand.z = skeleton.joints[JOINT_RIGHT_HAND].real.y / 1000;
 
         // Hand:  open (0), grasping (1), waving (2)
         /* TODO - see which of these actually work
@@ -599,9 +603,9 @@ namespace nuitrack_body_tracker
           {
             skeleton_data.gesture = userGestures_[i].type; // TODO - map Nuitrack to my MSG enum
             person_data.gesture = userGestures_[i].type; // TODO - map Nuitrack to my MSG enum
-            printf("Reporting Gesture %d for User %d\n", 
+            /*printf("Reporting Gesture %d for User %d\n", 
               userGestures_[i].type, userGestures_[i].userId);
-            userGestures_[i].type = (tdv::nuitrack::GestureType)(-1); // clear so we don't report old gestures
+            userGestures_[i].type = (tdv::nuitrack::GestureType)(-1);*/ // clear so we don't report old gestures
           }
 
         }
@@ -658,6 +662,17 @@ namespace nuitrack_body_tracker
     void onHandUpdate(HandTrackerData::Ptr handData)
     {
       // std::cout << "Nuitrack: onHandUpdate callback" << std::endl;
+      for (auto userHands : handData->getUsersHands())
+      {
+          if (userHands.leftHand)
+          {
+              if (userHands.leftHand->click)
+              {
+                  std::cout << "Left Hand Click" << std::endl;
+              }
+              std::cout << userHands.leftHand->pressure << std::endl;
+          }
+      }
     }
 
 
@@ -668,8 +683,8 @@ namespace nuitrack_body_tracker
       userGestures_ = gestureData->getGestures(); // Save for use in next skeleton frame
       for (int i = 0; i < userGestures_.size(); ++i)
       {
-        printf("onNewGesture: Gesture Recognized %d for User %d\n", 
-          userGestures_[i].type, userGestures_[i].userId);
+        /*printf("onNewGesture: Gesture Recognized %d for User %d\n", 
+          userGestures_[i].type, userGestures_[i].userId);*/
 
       }
 
@@ -738,12 +753,12 @@ namespace nuitrack_body_tracker
       // proj is 0.0 (left) --> 1.0 (right)
       float radians_x = (joint.proj.x - 0.5) * ASTRA_MINI_FOV_X;
       float radians_y = (joint.proj.y - 0.5) * ASTRA_MINI_FOV_Y;
-      std::cout << std::setprecision(4) << std::setw(7) 
+      /*std::cout << std::setprecision(4) << std::setw(7) 
         << "Nuitrack: " << name  
         << " x: " << joint.proj.x << " (" << radians_x << ")  y: " 
         << joint.proj.y << " (" << radians_y << ")" 
         // << "  Confidence: " << joint.confidence 
-        << std::endl;
+        << std::endl;*/
     }
 
 
@@ -774,7 +789,8 @@ namespace nuitrack_body_tracker
 
       // Align depth and color 
       Nuitrack::setConfigValue("DepthProvider.Depth2ColorRegistration", "true");
-
+      Nuitrack::setConfigValue("Segmentation.Background.BackgroundMode", "static_first_frame"); 
+      Nuitrack::setConfigValue("Segmentation.Background.CalibrationFramesNumber", "20");
       // Realsense Depth Module - force to 848x480 @ 60 FPS
       Nuitrack::setConfigValue("Realsense2Module.Depth.Preset", "5");
       Nuitrack::setConfigValue("Realsense2Module.Depth.RawWidth", "848");
@@ -830,7 +846,7 @@ namespace nuitrack_body_tracker
 
       // Point Cloud message (includes depth and color)
       int numpoints = frame_width_ * frame_height_;
-      cloud_msg_.header.frame_id = camera_depth_frame_;
+      cloud_msg_.header.frame_id = "my_frame";
       //cloud_msg_.header.stamp = ros::Time::now();
       cloud_msg_.width  = numpoints;
       cloud_msg_.height = 1;

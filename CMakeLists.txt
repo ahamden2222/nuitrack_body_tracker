@@ -16,8 +16,10 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   visualization_msgs
   body_tracker_msgs
-  std_msgs
+  std_msgs 
+  rospy
 )
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -131,6 +133,7 @@ include_directories(
   ${NUITRACK_SDK_PATH}/Nuitrack/include   
   ${NUITRACK_SDK_PATH}/Nuitrack/include/middleware  
   ${catkin_INCLUDE_DIRS}
+
 )
 
 ## Declare a C++ library
@@ -162,12 +165,13 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 
 # FIND_LIBRARY(NUITRACK_LIBRARY libnuitrack.so /home/system/NuitrackSDK/Nuitrack/lib/linux64/)  ## Does not seem to work!
 
-
 target_link_libraries(
   ${PROJECT_NAME}_node
   ${NUITRACK_SDK_PATH}/Nuitrack/lib/linux64/libnuitrack.so
   ${NUITRACK_SDK_PATH}/Nuitrack/lib/linux64/libmiddleware.so
   ${catkin_LIBRARIES}
+
+
 )
 
 #############

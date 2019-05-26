@@ -5,7 +5,7 @@
     <param name="camera_color_frame" value="nuitrack_camera_link"/> 
  
   </node>
-  <node pkg="nuitrack_body_tracker" type="grapher.py" name="grapher" output="screen"> </node>   
-  <node pkg="plotjuggler" type="PlotJuggler" name="PlotJuggler" output="screen"></node>
+
+
 </launch>
 

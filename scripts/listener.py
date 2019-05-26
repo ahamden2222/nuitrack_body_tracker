@@ -1,73 +1,39 @@
 #!/usr/bin/env python
-# Software License Agreement (BSD License)
-#
-# Copyright (c) 2008, Willow Garage, Inc.
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-#  * Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above
-#    copyright notice, this list of conditions and the following
-#    disclaimer in the documentation and/or other materials provided
-#    with the distribution.
-#  * Neither the name of Willow Garage, Inc. nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-# Revision $Id$
 
-## Simple talker demo that listens to std_msgs/Strings published 
-## to the 'chatter' topic
+from __future__ import print_function
 
+import roslib
+import sys
 import rospy
-from body_tracker_msgs.msg import BodyTrackerArray, BodyTracker, Skeleton
+from std_msgs.msg import String
+from sensor_msgs.msg import Image
+import numpy as np
+import time 
+from rospy.numpy_msg import numpy_msg
+from rospy_tutorials.msg import Floats
+import random
+import plane_test as pt
+import ransac
 
-glob_string = ""
-
-def get_string():
-    return glob_string
 
 def callback(data):
-    rospy.loginfo(data.joint_position_left_hand.x)
-    rospy.loginfo(data.joint_position_left_hand.y)
-    rospy.loginfo(data.joint_position_left_hand.z)
+  array = data.data.astype(int)
+  set_rand_points = set()
 
-    rospy.loginfo(data.joint_position_right_hand.x)
-    rospy.loginfo(data.joint_position_right_hand.y)
-    rospy.loginfo(data.joint_position_right_hand.z)  
+  #print(array.size)
+  #print(array)
+  for i in range(0,50):
+    rand_row = random.randint(0,479)
+    rand_col = random.randint(0,639)
+    depth_value = array[rand_row*640 + rand_col]
 
-    glob_string = str(data.joint_position_left_hand.x) + " " + str(data.joint_position_left_hand.y) + " " +str(data.joint_position_left_hand.z) + " " +str(data.joint_position_right_hand.x) + " " +str(data.joint_position_right_hand.y) + " " +str(data.joint_position_right_hand.z)
-    rospy.loginfo(glob_string)   
+    set_rand_points.add((rand_row-240,rand_col-320,depth_value))
+
+  print(ransac.ransac(set_rand_points, 50))
 
 def listener():
-
-    # In ROS, nodes are uniquely named. If two nodes with the same
-    # name are launched, the previous one is kicked off. The
-    # anonymous=True flag means that rospy will choose a unique
-    # name for our 'listener' node so that multiple listeners can
-    # run simultaneously.
-    rospy.init_node('listener', anonymous=True)
-
-    rospy.Subscriber('/body_tracker/skeleton', Skeleton, callback)
-
-    # spin() simply keeps python from exiting until this node is stopped
+    rospy.init_node('listener')
+    rospy.Subscriber("image_depth", numpy_msg(Floats), callback)
     rospy.spin()
 
 if __name__ == '__main__':
