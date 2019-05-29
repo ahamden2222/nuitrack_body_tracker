@@ -62,7 +62,7 @@
 // For Point Cloud publishing
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
-// #include <pcl/point_types.h>
+//#include <pcl/point_types.h>
 
 const bool ENABLE_PUBLISHING_FRAMES = true;
 
