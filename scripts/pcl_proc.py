@@ -121,11 +121,12 @@ def skeleton_callback(data):
 		vertical = closest_point[2]
 		horizontal = ((horizontal+1.1)/2.20)*1920
 		vertical = (vertical/1.20)*1080
-		touch_point = np.array([horizontal, vertical], dtype=np.float32)
-		point_pub.publish(touch_point)
+		touch_point = np.array([closest_point[0], closest_point[2], closest_point[1]], dtype=np.float32)
+		touch_point_str = str(closest_point[0]) +" "+ str(closest_point[2]) +" "+ str(closest_point[1])
+		point_pub.publish(touch_point_str)
 
 rospy.init_node('pcl_proc', anonymous=True)
 depth_sub = rospy.Subscriber("/camera/depth_cloud",PointCloud2,pcl_callback)
 skeleton_sub = rospy.Subscriber("/body_tracker/skeleton", Skeleton, callback_optimizer)
-point_pub = rospy.Publisher("touch_points", numpy_msg(Floats), queue_size=100)
+point_pub = rospy.Publisher("touch_points", String, queue_size=100)
 rospy.spin()

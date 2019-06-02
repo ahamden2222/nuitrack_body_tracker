@@ -75,8 +75,7 @@ namespace nuitrack_body_tracker
   {
   public:
 
-    nuitrack_body_tracker_node(std::string name) :
-      _name(name)
+    nuitrack_body_tracker_node(std::string name) 
     {
       ROS_INFO("%s: Starting...", _name.c_str());
 
@@ -110,7 +109,9 @@ namespace nuitrack_body_tracker
         ("camera/color/image", 1);
       depth_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>
         ("camera/depth_cloud", 1);
-
+      touch_point_sub_ = nh_.subscribe("/touch_points", 100, &nuitrack_body_tracker_node::subCallback, this);
+      touch_point_pub_ = nh_.advertise<std_msgs::String>("touch_points_proj",1);
+      
     }
 
     ~nuitrack_body_tracker_node()
@@ -122,7 +123,24 @@ namespace nuitrack_body_tracker
     // Nuitrack callbacks
     // WARNING!  THIS CODE ASSUMES COLOR AND DEPTH ARE SAME RESOLUTION!
     // TO FIX THIS, SEE NUITRACK GL SAMPLE
-
+    void subCallback(const std_msgs::String::ConstPtr& msg){
+       std::string x;
+       std::string y;
+       std::string z;
+       std::string data = msg->data;
+       std::stringstream ss(data);
+       ss >> x >> y >> z;
+       double x_pos_real = std::stod(x);
+       double y_pos_real = std::stod(y);       
+       double z_pos_real = std::stod(z);
+       Vector3 proj_point = depthSensor_->convertRealToProjCoords(x_pos_real, y_pos_real, z_pos_real );
+       data = std::to_string(proj_point.x) + " " +std::to_string(proj_point.y) + " "+std::to_string(proj_point.z);
+       std_msgs::String msg1;
+       std::stringstream ss0;
+       ss0 << data;
+       msg1.data = ss0.str();
+      touch_point_pub_.publish(msg1);
+    }
     void onNewColorFrame(RGBFrame::Ptr frame)
     {
       //ROS_INFO("DBG: Nuitrack::onNewColorFrame(), Frame = %d", ++color_frame_number_);
@@ -966,6 +984,8 @@ namespace nuitrack_body_tracker
     ros::Publisher depth_image_pub_;
     ros::Publisher color_image_pub_;
     ros::Publisher depth_cloud_pub_;
+    ros::Subscriber touch_point_sub_;
+    ros::Publisher touch_point_pub_;
 
     //ros::Publisher body_tracking_pose2d_pub_;
     //ros::Publisher body_tracking_pose3d_pub_;
