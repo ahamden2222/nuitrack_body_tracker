@@ -34,11 +34,13 @@ from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
 
 def points_callback(data):
-	x_pos = int(data.data[0])
-	y_pos = int(data.data[1])
+	touch_point = data.data.split()
+	x_pos = int(touch_point[0])
+	y_pos = int(touch_point[1])
+	#if 0 <= x_pos <= 1920 and 0 <= y_pos <= 1056:
 	print(x_pos, y_pos)
-	pyautogui.moveTo(x_pos, 1080-y_pos)
+	pyautogui.moveTo(x_pos, y_pos)
 
 rospy.init_node('point_grapher', anonymous=True)
-point_sub = rospy.Subscriber("/touch_points",numpy_msg(Floats),points_callback)
+point_sub = rospy.Subscriber("/on_screen_touch_point",String,points_callback)
 rospy.spin()
