@@ -31,7 +31,7 @@ from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
 
 best_plane = np.array([0,0,0,0])
-is_best_plane_found = True
+is_best_plane_found = False
 
 SINK_RUN_TIME = 30
 SOURCE_RUN_TIME = 30
@@ -55,7 +55,6 @@ def callback_optimizer(data):
 		t = time.time()
 		skeleton_callback(data)
 		elapsed = time.time() - t
-		print(elapsed)
 		SINK_RUN_TIME = 1/elapsed
 
 def graph_best_plane(best_plane, points):
@@ -69,13 +68,6 @@ def graph_best_plane(best_plane, points):
 	#ax.plot_surface(xx, yy, zz, alpha=0.2)
 	plt.show()
 
-"""
-fig = plt.figure()
-plt.xlim(0,854)
-plt.ylim(0, 480)
-plt.axis('off')
-plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
-curve = plt.scatter(0,0)"""
 def plot_pixel(pixel_x, pixel_y):
 	global curve
  	pixel_x = int(pixel_x)
@@ -88,45 +80,34 @@ def pcl_callback(data):
 	global best_plane
 	global is_best_plane_found
 	
-	if  is_best_plane_found:
+	if not is_best_plane_found:
+		print("Best plane found")
+		is_best_plane_found = True		
 		cloud_points = list(pc2.read_points(data, field_names = ("x", "y", "z"), skip_nans=True))
 
 		length_sublist = int(.0015*len(cloud_points))
 		cloud_points_sublist = random.sample(set(cloud_points), length_sublist)
 		best_plane = ransac.ransac(cloud_points_sublist, 15)
-		"""
-		points = [[],[],[]]
-		for i in range(0, length_sublist):
-			points[0].append(round(cloud_points_sublist[i][0], 4))
-			points[1].append(round(cloud_points_sublist[i][1], 4))
-			points[2].append(round(cloud_points_sublist[i][2], 4))
-
-		graph_best_plane(best_plane, points)
-		is_best_plane_found = False"""
-
 
 def skeleton_callback(data):
+	global is_best_plane_found
+	if is_best_plane_found:
 
-	x = data.joint_position_left_hand.x
-	y = data.joint_position_left_hand.y
-	z = data.joint_position_left_hand.z
-	point = np.array([x,y,z])
+		x = data.joint_position_left_hand_real.x
+		y = data.joint_position_left_hand_real.y
+		z = data.joint_position_left_hand_real.z
+		point = np.array([x,y,z])
 
 	
-	if (pt.distance_to_plane(best_plane, point)) < .3:
-		print("contact")
-		
-		closest_point = pt.closest_point_to_plane(best_plane, point)
-		horizontal = closest_point[0]
-		vertical = closest_point[2]
-		horizontal = ((horizontal+1.1)/2.20)*1920
-		vertical = (vertical/1.20)*1080
-		touch_point = np.array([closest_point[0], closest_point[2], closest_point[1]], dtype=np.float32)
-		touch_point_str = str(closest_point[0]) +" "+ str(closest_point[2]) +" "+ str(closest_point[1])
-		point_pub.publish(touch_point_str)
+		if pt.distance_to_plane(best_plane, point) < .5:
+			print("contact")
+
+			touch_point_str = str(data.joint_position_left_hand_proj.x) +" "+ str(data.joint_position_left_hand_proj.y)
+			print(touch_point_str)
+	 		point_pub.publish(touch_point_str)
 
 rospy.init_node('pcl_proc', anonymous=True)
 depth_sub = rospy.Subscriber("/camera/depth_cloud",PointCloud2,pcl_callback)
 skeleton_sub = rospy.Subscriber("/body_tracker/skeleton", Skeleton, callback_optimizer)
-point_pub = rospy.Publisher("touch_points", String, queue_size=100)
+point_pub = rospy.Publisher("touch_points_proj", String, queue_size=100)
 rospy.spin()

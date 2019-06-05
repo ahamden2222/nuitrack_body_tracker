@@ -109,9 +109,6 @@ namespace nuitrack_body_tracker
         ("camera/color/image", 1);
       depth_cloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>
         ("camera/depth_cloud", 1);
-      touch_point_sub_ = nh_.subscribe("/touch_points", 100, &nuitrack_body_tracker_node::subCallback, this);
-      touch_point_pub_ = nh_.advertise<std_msgs::String>("touch_points_proj",1);
-      
     }
 
     ~nuitrack_body_tracker_node()
@@ -123,24 +120,7 @@ namespace nuitrack_body_tracker
     // Nuitrack callbacks
     // WARNING!  THIS CODE ASSUMES COLOR AND DEPTH ARE SAME RESOLUTION!
     // TO FIX THIS, SEE NUITRACK GL SAMPLE
-    void subCallback(const std_msgs::String::ConstPtr& msg){
-       std::string x;
-       std::string y;
-       std::string z;
-       std::string data = msg->data;
-       std::stringstream ss(data);
-       ss >> x >> y >> z;
-       double x_pos_real = std::stod(x);
-       double y_pos_real = std::stod(y);       
-       double z_pos_real = std::stod(z);
-       Vector3 proj_point = depthSensor_->convertRealToProjCoords(x_pos_real, y_pos_real, z_pos_real );
-       data = std::to_string(proj_point.x) + " " +std::to_string(proj_point.y) + " "+std::to_string(proj_point.z);
-       std_msgs::String msg1;
-       std::stringstream ss0;
-       ss0 << data;
-       msg1.data = ss0.str();
-      touch_point_pub_.publish(msg1);
-    }
+  
     void onNewColorFrame(RGBFrame::Ptr frame)
     {
       //ROS_INFO("DBG: Nuitrack::onNewColorFrame(), Frame = %d", ++color_frame_number_);
@@ -260,8 +240,8 @@ namespace nuitrack_body_tracker
           //std::cout << cloud_point.x << std::endl;
           
           *out_x = X_World;
-          *out_y = Z_World;
-          *out_z = Y_World; 
+          *out_y = Y_World;
+          *out_z = Z_World; 
           ++out_x;
           ++out_y;
           ++out_z;
@@ -546,55 +526,100 @@ namespace nuitrack_body_tracker
 
         // *** POSITION 3D ***
         person_data.position3d.x = skeleton.joints[KEY_JOINT_TO_TRACK].real.x / 1000.0;
-        person_data.position3d.y = skeleton.joints[KEY_JOINT_TO_TRACK].real.z / 1000.0;
-        person_data.position3d.z = skeleton.joints[KEY_JOINT_TO_TRACK].real.y / 1000.0;
+        person_data.position3d.y = skeleton.joints[KEY_JOINT_TO_TRACK].real.y / 1000.0;
+        person_data.position3d.z = skeleton.joints[KEY_JOINT_TO_TRACK].real.z / 1000.0;
  
        
-        skeleton_data.joint_position_head.x = skeleton.joints[JOINT_HEAD].real.x / 1000.0;
-        skeleton_data.joint_position_head.y = skeleton.joints[JOINT_HEAD].real.z / 1000.0;
-        skeleton_data.joint_position_head.z = skeleton.joints[JOINT_HEAD].real.y / 1000.0;
+        skeleton_data.joint_position_head_real.x = skeleton.joints[JOINT_HEAD].real.x / 1000.0;
+        skeleton_data.joint_position_head_real.y = skeleton.joints[JOINT_HEAD].real.y / 1000.0;
+        skeleton_data.joint_position_head_real.z = skeleton.joints[JOINT_HEAD].real.z / 1000.0;
 
-        skeleton_data.joint_position_neck.x = skeleton.joints[JOINT_NECK].real.x / 1000.0;
-        skeleton_data.joint_position_neck.y = skeleton.joints[JOINT_NECK].real.z / 1000.0;
-        skeleton_data.joint_position_neck.z = skeleton.joints[JOINT_NECK].real.y / 1000.0;
+        skeleton_data.joint_position_neck_real.x = skeleton.joints[JOINT_NECK].real.x / 1000.0;
+        skeleton_data.joint_position_neck_real.y = skeleton.joints[JOINT_NECK].real.y / 1000.0;
+        skeleton_data.joint_position_neck_real.z = skeleton.joints[JOINT_NECK].real.z / 1000.0;
 
-        skeleton_data.joint_position_spine_top.x = skeleton.joints[JOINT_TORSO].real.x / 1000.0;
-        skeleton_data.joint_position_spine_top.y = skeleton.joints[JOINT_TORSO].real.z / 1000.0;
-        skeleton_data.joint_position_spine_top.z = skeleton.joints[JOINT_TORSO].real.y / 1000.0;
+        skeleton_data.joint_position_spine_top_real.x = skeleton.joints[JOINT_TORSO].real.x / 1000.0;
+        skeleton_data.joint_position_spine_top_real.y = skeleton.joints[JOINT_TORSO].real.y / 1000.0;
+        skeleton_data.joint_position_spine_top_real.z = skeleton.joints[JOINT_TORSO].real.z / 1000.0;
 
-        skeleton_data.joint_position_spine_mid.x = skeleton.joints[JOINT_WAIST].real.x / 1000.0;
-        skeleton_data.joint_position_spine_mid.y = skeleton.joints[JOINT_WAIST].real.z / 1000.0;
-        skeleton_data.joint_position_spine_mid.z = skeleton.joints[JOINT_WAIST].real.y / 1000.0;
+        skeleton_data.joint_position_spine_mid_real.x = skeleton.joints[JOINT_WAIST].real.x / 1000.0;
+        skeleton_data.joint_position_spine_mid_real.y = skeleton.joints[JOINT_WAIST].real.y / 1000.0;
+        skeleton_data.joint_position_spine_mid_real.z = skeleton.joints[JOINT_WAIST].real.z / 1000.0;
 
-        skeleton_data.joint_position_spine_bottom.x = 0.0;
-        skeleton_data.joint_position_spine_bottom.y = 0.0;
-        skeleton_data.joint_position_spine_bottom.z = 0.0;
+        skeleton_data.joint_position_spine_bottom_real.x = 0.0;
+        skeleton_data.joint_position_spine_bottom_real.y = 0.0;
+        skeleton_data.joint_position_spine_bottom_real.z = 0.0;
 
-        skeleton_data.joint_position_left_shoulder.x = skeleton.joints[JOINT_LEFT_SHOULDER].real.x / 1000.0;
-        skeleton_data.joint_position_left_shoulder.y = skeleton.joints[JOINT_LEFT_SHOULDER].real.z / 1000.0;
-        skeleton_data.joint_position_left_shoulder.z = skeleton.joints[JOINT_LEFT_SHOULDER].real.y / 1000.0;
+        skeleton_data.joint_position_left_shoulder_real.x = skeleton.joints[JOINT_LEFT_SHOULDER].real.x / 1000.0;
+        skeleton_data.joint_position_left_shoulder_real.y = skeleton.joints[JOINT_LEFT_SHOULDER].real.y / 1000.0;
+        skeleton_data.joint_position_left_shoulder_real.z = skeleton.joints[JOINT_LEFT_SHOULDER].real.z / 1000.0;
 
-        skeleton_data.joint_position_left_elbow.x = skeleton.joints[JOINT_LEFT_ELBOW].real.x / 1000.0;
-        skeleton_data.joint_position_left_elbow.y = skeleton.joints[JOINT_LEFT_ELBOW].real.z / 1000.0;
-        skeleton_data.joint_position_left_elbow.z = skeleton.joints[JOINT_LEFT_ELBOW].real.y / 1000.0;
+        skeleton_data.joint_position_left_elbow_real.x = skeleton.joints[JOINT_LEFT_ELBOW].real.x / 1000.0;
+        skeleton_data.joint_position_left_elbow_real.y = skeleton.joints[JOINT_LEFT_ELBOW].real.y / 1000.0;
+        skeleton_data.joint_position_left_elbow_real.z = skeleton.joints[JOINT_LEFT_ELBOW].real.z / 1000.0;
 
-        skeleton_data.joint_position_left_hand.x = skeleton.joints[JOINT_LEFT_HAND].real.x / 1000;
-        skeleton_data.joint_position_left_hand.y = skeleton.joints[JOINT_LEFT_HAND].real.z / 1000;
-        skeleton_data.joint_position_left_hand.z = skeleton.joints[JOINT_LEFT_HAND].real.y / 1000;
+        skeleton_data.joint_position_left_hand_real.x = skeleton.joints[JOINT_LEFT_HAND].real.x / 1000;
+        skeleton_data.joint_position_left_hand_real.y = skeleton.joints[JOINT_LEFT_HAND].real.y / 1000;
+        skeleton_data.joint_position_left_hand_real.z = skeleton.joints[JOINT_LEFT_HAND].real.z / 1000;
 
 
+        skeleton_data.joint_position_right_shoulder_real.x = skeleton.joints[JOINT_RIGHT_SHOULDER].real.x / 1000.0;
+        skeleton_data.joint_position_right_shoulder_real.y = skeleton.joints[JOINT_RIGHT_SHOULDER].real.y / 1000.0;
+        skeleton_data.joint_position_right_shoulder_real.z = skeleton.joints[JOINT_RIGHT_SHOULDER].real.z / 1000.0;
 
-        skeleton_data.joint_position_right_shoulder.x = skeleton.joints[JOINT_RIGHT_SHOULDER].real.x / 1000.0;
-        skeleton_data.joint_position_right_shoulder.y = skeleton.joints[JOINT_RIGHT_SHOULDER].real.z / 1000.0;
-        skeleton_data.joint_position_right_shoulder.z = skeleton.joints[JOINT_RIGHT_SHOULDER].real.y / 1000.0;
+        skeleton_data.joint_position_right_elbow_real.x = skeleton.joints[JOINT_RIGHT_ELBOW].real.x / 1000.0;
+        skeleton_data.joint_position_right_elbow_real.y = skeleton.joints[JOINT_RIGHT_ELBOW].real.y / 1000.0;
+        skeleton_data.joint_position_right_elbow_real.z = skeleton.joints[JOINT_RIGHT_ELBOW].real.z / 1000.0;
 
-        skeleton_data.joint_position_right_elbow.x = skeleton.joints[JOINT_RIGHT_ELBOW].real.x / 1000.0;
-        skeleton_data.joint_position_right_elbow.y = skeleton.joints[JOINT_RIGHT_ELBOW].real.z / 1000.0;
-        skeleton_data.joint_position_right_elbow.z = skeleton.joints[JOINT_RIGHT_ELBOW].real.y / 1000.0;
+        skeleton_data.joint_position_right_hand_real.x = skeleton.joints[JOINT_RIGHT_HAND].real.x / 1000;
+        skeleton_data.joint_position_right_hand_real.y = skeleton.joints[JOINT_RIGHT_HAND].real.y / 1000;
+        skeleton_data.joint_position_right_hand_real.z = skeleton.joints[JOINT_RIGHT_HAND].real.z / 1000;
 
-        skeleton_data.joint_position_right_hand.x = skeleton.joints[JOINT_RIGHT_HAND].real.x / 1000;
-        skeleton_data.joint_position_right_hand.y = skeleton.joints[JOINT_RIGHT_HAND].real.z / 1000;
-        skeleton_data.joint_position_right_hand.z = skeleton.joints[JOINT_RIGHT_HAND].real.y / 1000;
+ 
+       //////////////////////////////////////////////////////////////////////////////////////////////
+        skeleton_data.joint_position_head_proj.x = skeleton.joints[JOINT_HEAD].proj.x;
+        skeleton_data.joint_position_head_proj.y = skeleton.joints[JOINT_HEAD].proj.y;
+        skeleton_data.joint_position_head_proj.z = skeleton.joints[JOINT_HEAD].proj.z;
+
+        skeleton_data.joint_position_neck_proj.x = skeleton.joints[JOINT_NECK].proj.x;
+        skeleton_data.joint_position_neck_proj.y = skeleton.joints[JOINT_NECK].proj.y;
+        skeleton_data.joint_position_neck_proj.z = skeleton.joints[JOINT_NECK].proj.z;
+
+        skeleton_data.joint_position_spine_top_proj.x = skeleton.joints[JOINT_TORSO].proj.x;
+        skeleton_data.joint_position_spine_top_proj.y = skeleton.joints[JOINT_TORSO].proj.y;
+        skeleton_data.joint_position_spine_top_proj.z = skeleton.joints[JOINT_TORSO].proj.z;
+
+        skeleton_data.joint_position_spine_mid_proj.x = skeleton.joints[JOINT_WAIST].proj.x;
+        skeleton_data.joint_position_spine_mid_proj.y = skeleton.joints[JOINT_WAIST].proj.y;
+        skeleton_data.joint_position_spine_mid_proj.z = skeleton.joints[JOINT_WAIST].proj.z;
+
+        skeleton_data.joint_position_spine_bottom_proj.x = 0.0;
+        skeleton_data.joint_position_spine_bottom_proj.y = 0.0;
+        skeleton_data.joint_position_spine_bottom_proj.z = 0.0;
+
+        skeleton_data.joint_position_left_shoulder_proj.x = skeleton.joints[JOINT_LEFT_SHOULDER].proj.x;
+        skeleton_data.joint_position_left_shoulder_proj.y = skeleton.joints[JOINT_LEFT_SHOULDER].proj.y;
+        skeleton_data.joint_position_left_shoulder_proj.z = skeleton.joints[JOINT_LEFT_SHOULDER].proj.z;
+
+        skeleton_data.joint_position_left_elbow_proj.x = skeleton.joints[JOINT_LEFT_ELBOW].proj.x;
+        skeleton_data.joint_position_left_elbow_proj.y = skeleton.joints[JOINT_LEFT_ELBOW].proj.y;
+        skeleton_data.joint_position_left_elbow_proj.z = skeleton.joints[JOINT_LEFT_ELBOW].proj.z;
+
+        skeleton_data.joint_position_left_hand_proj.x = skeleton.joints[JOINT_LEFT_HAND].proj.x;
+        skeleton_data.joint_position_left_hand_proj.y = skeleton.joints[JOINT_LEFT_HAND].proj.y;
+        skeleton_data.joint_position_left_hand_proj.z = skeleton.joints[JOINT_LEFT_HAND].proj.z;
+
+        skeleton_data.joint_position_right_shoulder_proj.x = skeleton.joints[JOINT_RIGHT_SHOULDER].proj.x;
+        skeleton_data.joint_position_right_shoulder_proj.y = skeleton.joints[JOINT_RIGHT_SHOULDER].proj.y;
+        skeleton_data.joint_position_right_shoulder_proj.z = skeleton.joints[JOINT_RIGHT_SHOULDER].proj.z;
+
+        skeleton_data.joint_position_right_elbow_proj.x = skeleton.joints[JOINT_RIGHT_ELBOW].proj.x;
+        skeleton_data.joint_position_right_elbow_proj.y = skeleton.joints[JOINT_RIGHT_ELBOW].proj.y;
+        skeleton_data.joint_position_right_elbow_proj.z = skeleton.joints[JOINT_RIGHT_ELBOW].proj.z;
+
+        skeleton_data.joint_position_right_hand_proj.x = skeleton.joints[JOINT_RIGHT_HAND].proj.x;
+        skeleton_data.joint_position_right_hand_proj.y = skeleton.joints[JOINT_RIGHT_HAND].proj.y;
+        skeleton_data.joint_position_right_hand_proj.z = skeleton.joints[JOINT_RIGHT_HAND].proj.z;
 
         // Hand:  open (0), grasping (1), waving (2)
         /* TODO - see which of these actually work
@@ -650,23 +675,23 @@ namespace nuitrack_body_tracker
 
         PublishMarker(
           3, // ID
-          skeleton_data.joint_position_head.x,
-          skeleton_data.joint_position_head.y,
-          skeleton_data.joint_position_head.z,
+          skeleton_data.joint_position_head_real.x,
+          skeleton_data.joint_position_head_real.y,
+          skeleton_data.joint_position_head_real.z,
           0.7, 0.0, 0.7 ); // r,g,b
 
         PublishMarker(
           4, // ID
-          skeleton_data.joint_position_spine_top.x,
-          skeleton_data.joint_position_spine_top.y,
-          skeleton_data.joint_position_spine_top.z,
+          skeleton_data.joint_position_spine_top_real.x,
+          skeleton_data.joint_position_spine_top_real.y,
+          skeleton_data.joint_position_spine_top_real.z,
           0.0, 0.0, 1.0 ); // r,g,b
 
         PublishMarker(
           5, // ID
-          skeleton_data.joint_position_spine_mid.x,
-          skeleton_data.joint_position_spine_mid.y,
-          skeleton_data.joint_position_spine_mid.z,
+          skeleton_data.joint_position_spine_mid_real.x,
+          skeleton_data.joint_position_spine_mid_real.y,
+          skeleton_data.joint_position_spine_mid_real.z,
           0.0, 1.0, 0.0 ); // r,g,b
 
       }
@@ -984,8 +1009,7 @@ namespace nuitrack_body_tracker
     ros::Publisher depth_image_pub_;
     ros::Publisher color_image_pub_;
     ros::Publisher depth_cloud_pub_;
-    ros::Subscriber touch_point_sub_;
-    ros::Publisher touch_point_pub_;
+
 
     //ros::Publisher body_tracking_pose2d_pub_;
     //ros::Publisher body_tracking_pose3d_pub_;
