@@ -21,9 +21,23 @@ def plane_finder(point_1, point_2, point_3):
     vect_1 = vector_finder(point_1,point_2)
     vect_2 = vector_finder(point_1,point_3)
     vect_3 = vector_finder(point_2, point_3)
+    try:
+    	if np.array_equal(vect_1, np.array([0,0,0])) or np.array_equal(vect_2, np.array([0,0,0])) or np.array_equal(vect_3, np.array([0,0,0])):
+    		raise ValueError('All points must be unique!')
+	
+    except: 
+	return
+   
+    pt1_unit =  np.around(np.absolute(point_1/np.linalg.norm(point_1)), decimals=5)
+    pt2_unit =  np.around(np.absolute(point_2/np.linalg.norm(point_2)), decimals=5)
+    pt3_unit =  np.around(np.absolute(point_3/np.linalg.norm(point_3)), decimals=5)
 
-    if np.array_equal(vect_1, np.array([0,0,0])) or np.array_equal(vect_2, np.array([0,0,0])) or np.array_equal(vect_3, np.array([0,0,0])):
-    	raise ValueError('All points must be unique!')
+    try:
+	if np.array_equal(pt1_unit,pt2_unit) or np.array_equal(pt1_unit,pt3_unit) or np.array_equal(pt3_unit,pt2_unit):
+		raise ValueError('Points cannot be on the same line!')
+
+    except:
+	return 
 
     normal_vector = normal_finder(vect_1, vect_2)
 

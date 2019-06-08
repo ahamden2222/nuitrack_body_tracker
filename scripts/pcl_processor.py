@@ -12,21 +12,16 @@ import numpy as np
 import time 
 from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
-
 from sensor_msgs import point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import Header
 from body_tracker_msgs.msg import BodyTrackerArray, BodyTracker, Skeleton
-
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import random 
-
 import ransac
 import plane_test as pt
-
 import math
-
 from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
 
@@ -39,6 +34,7 @@ VAL_TO_CAPTURE = 1
 counter = 0
 
 def callback_optimizer(data):
+
 	global SINK_RUN_TIME
 	global SOURCE_RUN_TIME
 	global VAL_TO_CAPTURE
@@ -58,6 +54,7 @@ def callback_optimizer(data):
 		SINK_RUN_TIME = 1/elapsed
 
 def graph_best_plane(best_plane, points):
+
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')
 	ax.scatter(points[0], points[1], points[2], c='r', marker='o')
@@ -65,10 +62,11 @@ def graph_best_plane(best_plane, points):
 	y= np.arange(-2,4,1)
 	xx, yy = np.meshgrid(x, y)
 	zz = ((-best_plane[0] * xx - best_plane[1] * yy -best_plane[3])/(best_plane[2]))
-	#ax.plot_surface(xx, yy, zz, alpha=0.2)
+	ax.plot_surface(xx, yy, zz, alpha=0.2)
 	plt.show()
 
 def plot_pixel(pixel_x, pixel_y):
+
 	global curve
  	pixel_x = int(pixel_x)
 	pixel_y = int(pixel_y)
@@ -85,8 +83,8 @@ def pcl_callback(data):
 		is_best_plane_found = True		
 		cloud_points = list(pc2.read_points(data, field_names = ("x", "y", "z"), skip_nans=True))
 
-		length_sublist = int(.0015*len(cloud_points))
-		cloud_points_sublist = random.sample(set(cloud_points), length_sublist)
+		length_of_sublist = int(.0015*len(cloud_points))
+		cloud_points_sublist = random.sample(set(cloud_points), length_of_sublist)
 		best_plane = ransac.ransac(cloud_points_sublist, 15)
 
 def skeleton_callback(data):
@@ -100,9 +98,9 @@ def skeleton_callback(data):
 
 	
 		if pt.distance_to_plane(best_plane, point) < .5:
-			print("contact")
 
-			touch_point_str = str(data.joint_position_left_hand_proj.x) +" "+ str(data.joint_position_left_hand_proj.y)
+			print("contact")
+			touch_point_str = str(640*data.joint_position_left_hand_proj.x) +" "+ str(480*data.joint_position_left_hand_proj.y)
 			print(touch_point_str)
 	 		point_pub.publish(touch_point_str)
 
